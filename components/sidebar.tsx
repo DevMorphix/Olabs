@@ -20,6 +20,11 @@ const routes = [
     icon: History,
     href: "/history",
   },
+  {
+    label: "chapters",
+    icon: History,
+    href: "/chapters",
+  },
 ]
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}

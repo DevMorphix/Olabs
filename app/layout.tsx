@@ -7,7 +7,7 @@ import type React from "react" // Added import for React
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "YouTube AI Summarizer",
+  title: "olabs",
   description: "Summarize YouTube videos with AI",
 }
 
@@ -26,7 +26,7 @@ export default function RootLayout({
           <div className="flex flex-1 flex-col overflow-hidden">
             <header className="flex h-14 items-center border-b px-4 lg:px-6">
               <MobileSidebar />
-              <h1 className="text-lg font-semibold">YouTube AI Summarizer</h1>
+              <h1 className="text-lg font-semibold">olabs</h1>
             </header>
             <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
           </div>

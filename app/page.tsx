@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AVAILABLE_LANGUAGES, extractVideoId } from "@/lib/youtube"
 import { ModelSelector } from "@/components/ModelSelector"
+import { createchapter } from "@/app/api/index"
 
 export default function Home() {
   const [url, setUrl] = useState("")
@@ -21,6 +22,7 @@ export default function Home() {
     e.preventDefault()
 
     try {
+      
       const videoId = extractVideoId(url)
       const cleanUrl = `https://www.youtube.com/watch?v=${videoId}`
       const encodedUrl = btoa(cleanUrl).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
@@ -35,7 +37,7 @@ export default function Home() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold text-center">YouTube AI Summarizer</CardTitle>
+          <CardTitle className="text-3xl font-bold text-center">olabs</CardTitle>
           <CardDescription className="text-center">Enter a YouTube URL to get an AI-generated summary</CardDescription>
         </CardHeader>
         <CardContent>

@@ -12,6 +12,8 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import FormData from 'form-data';
 import fetch from 'node-fetch';
+import axios from 'axios';
+import { createchapter } from "@/app/api/index"
 
 const execAsync = promisify(exec);
 
@@ -531,23 +533,23 @@ export async function POST(req: Request) {
       logger.info(`Using ${MODEL_NAMES[aiModel as keyof typeof MODEL_NAMES]} model for generation...`);
 
       // Check cache first
-      const existingSummary = await prisma.summary.findFirst({
-        where: {
-          videoId,
-          language
-        }
-      });
+      // const existingSummary = await prisma.summary.findFirst({
+      //   where: {
+      //     videoId,
+      //     language
+      //   }
+      // });
 
-      if (existingSummary) {
-        await writeProgress({
-          type: 'complete',
-          summary: existingSummary.content,
-          source: 'cache',
-          status: 'completed'
-        });
-        await writer.close();
-        return;
-      }
+      // if (existingSummary) {
+      //   await writeProgress({
+      //     type: 'complete',
+      //     summary: existingSummary.content,
+      //     source: 'cache',
+      //     status: 'completed'
+      //   });
+      //   await writer.close();
+      //   return;
+      // }
 
       // Get transcript
       await writeProgress({
@@ -615,47 +617,61 @@ export async function POST(req: Request) {
 
       try {
         // Check if summary already exists
-        const existingSummary = await prisma.summary.findFirst({
-          where: {
-            videoId,
-            language
-          }
-        });
+        // const existingSummary = await prisma.summary.findFirst({
+        //   where: {
+        //     videoId,
+        //     language
+        //   }
+        // });
 
         let savedSummary;
-        if (existingSummary) {
-          // Update existing summary
-          savedSummary = await prisma.summary.update({
-            where: {
-              id: existingSummary.id
-            },
-            data: {
-              content: summary,
-              mode,
-              source,
-              updatedAt: new Date()
-            }
-          });
-        } else {
+        // if (existingSummary) {
+        //   // Update existing summary
+        //   savedSummary = await prisma.summary.update({
+        //     where: {
+        //       id: existingSummary.id
+        //     },
+        //     data: {
+        //       content: summary,
+        //       mode,
+        //       source,
+        //       updatedAt: new Date()
+        //     }
+        //   });
+        // } else {
           // Create new summary
-          savedSummary = await prisma.summary.create({
-            data: {
-              videoId,
-              title,
-              content: summary,
-              language,
-              mode,
-              source
-            }
-          });
-        }
+          // savedSummary = await prisma.summary.create({
+          //   data: {
+          //     videoId,
+          //     title,
+          //     content: summary,
+          //     language,
+          //     mode,
+          //     source
+          //   }
+          // });
+        // }
 
-        await writeProgress({
-          type: 'complete',
-          summary: savedSummary.content,
-          source: savedSummary.source || 'youtube',
-          status: 'completed'
-        });
+        // await writeProgress({
+        //   type: 'complete',
+        //   summary: savedSummary.content,
+        //   source: savedSummary.source || 'youtube',
+        //   status: 'completed'
+        // });
+
+        const response = await createchapter(
+          {title:title,content:summary,yt_links:[{title:title,url:`https://www.youtube.com/watch?v=${videoId}`,description:summary}]}
+        )
+        console.log("after call to api",response);
+        
+
+        // const response = await axios.post(
+        //   `https://olabs-hackathon-backend.onrender.com/api/chapter/create-chapter`,
+        //   {title:title,content:summary,yt_links:[{title:title,url:`https://www.youtube.com/watch?v=${videoId}`,description:summary}]},
+        // );
+        // console.log("after call to api",response.data);
+        
+
       } catch (dbError: any) {
         console.warn('Warning: Failed to save to database -', dbError?.message || 'Unknown database error');
 

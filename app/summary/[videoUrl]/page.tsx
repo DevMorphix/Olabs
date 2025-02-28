@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Youtube, Headphones, Subtitles, Bot, Archive } from "lucide-react"
 import { use } from "react"
 import ReactMarkdown from 'react-markdown'
+import { createchapter } from "@/app/api/index"
 
 interface ProcessingStatus {
   currentChunk: number;
@@ -52,6 +53,8 @@ export default function SummaryPage({ params }: PageProps) {
         setLoading(true)
         setError(null)
 
+
+        
         const url = urlSafeBase64Decode(videoUrl)
         const response = await fetch("/api/summarize", {
           method: "POST",
@@ -93,6 +96,7 @@ export default function SummaryPage({ params }: PageProps) {
                 message: data.message
               })
             } else if (data.type === 'complete') {
+
               setSummary(data.summary)
               setSource(data.source)
               break
@@ -106,6 +110,7 @@ export default function SummaryPage({ params }: PageProps) {
         setError(err instanceof Error ? err.message : "An error occurred while generating the summary")
       } finally {
         setLoading(false)
+        
       }
     }
 
