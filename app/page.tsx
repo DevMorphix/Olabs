@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
+import type React from "react";
+import { useState } from "react";
 import {
   GraduationCap,
   Menu,
@@ -19,20 +19,20 @@ import {
   User,
   Eye,
   EyeOff,
-} from "lucide-react"
+} from "lucide-react";
 
-import olabsboy from "../public/assets/olabsboy.svg"
-import { studentRegister, instructorRegister } from "./api/index"
+import olabsboy from "../public/assets/olabsboy.svg";
+import { studentRegister, instructorRegister, studentLogin , instructorLogin } from "./api/index";
 
 export default function EducratLanding() {
-  const [showSignUpModal, setShowSignUpModal] = useState(false)
-  const [showSignInModal, setShowSignInModal] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [activeTab, setActiveTab] = useState("student")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [fullName, setFullName] = useState("")
-  const [message, setMessage] = useState<string>('');
+  const [showSignUpModal, setShowSignUpModal] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState("student");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [message, setMessage] = useState<string>("");
 
   const navItems = [
     { label: "Home", active: true, hasDropdown: true },
@@ -41,64 +41,99 @@ export default function EducratLanding() {
     { label: "Blog", active: false, hasDropdown: true },
     { label: "Pages", active: false, hasDropdown: true },
     { label: "Contact", active: false, hasDropdown: false },
-  ]
+  ];
 
   const handleOpenSignUp = () => {
-    setShowSignUpModal(true)
-    setShowSignInModal(false)
-  }
+    setShowSignUpModal(true);
+    setShowSignInModal(false);
+  };
 
   const handleOpenSignIn = () => {
-    setShowSignInModal(true)
-    setShowSignUpModal(false)
-  }
+    setShowSignInModal(true);
+    setShowSignUpModal(false);
+  };
 
   const handleCloseModals = () => {
-    setShowSignUpModal(false)
-    setShowSignInModal(false)
-  }
+    setShowSignUpModal(false);
+    setShowSignInModal(false);
+  };
 
   // Auth Modal Component
   interface AuthModalProps {
-    isSignUp: boolean
-    onClose: () => void
-    onSwitchMode: () => void
+    isSignUp: boolean;
+    onClose: () => void;
+    onSwitchMode: () => void;
   }
 
-  const hanldeRegistration = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    console.log("activeTab", activeTab)
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log("activeTab", activeTab);
 
-    const formElement = e.target as HTMLFormElement
-    const formData = new FormData(formElement)
+    const formElement = e.target as HTMLFormElement;
+    const formData = new FormData(formElement);
+
+    const data = {
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+    };
+
+    console.log("Form data:", data);
+
+    try {
+      if (activeTab === "student") {
+        const response = await studentLogin(data);
+        console.log("student response", response);
+      } else if (activeTab === "instructor") {
+        const response = await instructorLogin(data);
+        const message = response.message;
+        setMessage(message);
+        console.log("instructor response", response);
+      }
+      // const response = await studentRegister(data)
+      // console.log("response", response)
+    } catch (error) {
+      console.error("Registration error:", error);
+    }
+  }
+
+
+  const hanldeRegistration = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log("activeTab", activeTab);
+
+    const formElement = e.target as HTMLFormElement;
+    const formData = new FormData(formElement);
 
     const data = {
       email: formData.get("email") as string,
       password: formData.get("password") as string,
       username: formData.get("fullName") as string,
-    }
+    };
 
-    console.log("Form data:", data)
-   
+    console.log("Form data:", data);
 
     try {
       if (activeTab === "student") {
-        const response = await studentRegister(data)
-        console.log("student response", response)
-      }else if (activeTab === "instructor") {
-        const response = await instructorRegister(data)
-        const message = response.message 
-        setMessage(message)
-        console.log("instructor response", response) 
+        const response = await studentRegister(data);
+        console.log("student response", response);
+      } else if (activeTab === "instructor") {
+        const response = await instructorRegister(data);
+        const message = response.message;
+        setMessage(message);
+        console.log("instructor response", response);
       }
       // const response = await studentRegister(data)
       // console.log("response", response)
     } catch (error) {
-      console.error("Registration error:", error)
+      console.error("Registration error:", error);
     }
-  }
+  };
 
-  const AuthModal: React.FC<AuthModalProps> = ({ isSignUp, onClose, onSwitchMode }) => {
+  const AuthModal: React.FC<AuthModalProps> = ({
+    isSignUp,
+    onClose,
+    onSwitchMode,
+  }) => {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
         <div
@@ -118,40 +153,50 @@ export default function EducratLanding() {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-purple-600">
               <GraduationCap className="h-7 w-7 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">{isSignUp ? "Create an Account" : "Welcome Back"}</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {isSignUp ? "Create an Account" : "Welcome Back"}
+            </h2>
             <p className="mt-2 text-gray-600">
-              {isSignUp ? "Join our learning community today" : "Sign in to continue your learning journey"}
+              {isSignUp
+                ? "Join our learning community today"
+                : "Sign in to continue your learning journey"}
             </p>
           </div>
 
-          {/* User Type Selection - Sign Up Only */}
-          {isSignUp && (
-            <div className="mb-6 grid grid-cols-2 gap-2 rounded-lg bg-gray-100 p-1">
-              <button
-                className={`rounded-md py-2 text-sm font-medium transition ${
-                  activeTab === "student" ? "bg-white text-[#0F0A27] shadow-sm" : "text-gray-600 hover:text-gray-900"
-                }`}
-                onClick={() => setActiveTab("student")}
-              >
-                Student
-              </button>
-              <button
-                className={`rounded-md py-2 text-sm font-medium transition ${
-                  activeTab === "instructor" ? "bg-white text-[#0F0A27] shadow-sm" : "text-gray-600 hover:text-gray-900"
-                }`}
-                onClick={() => setActiveTab("instructor")}
-              >
-                Instructor
-              </button>
-            </div>
-          )}
+          {/* User Type Selection -  */}
+
+          <div className="mb-6 grid grid-cols-2 gap-2 rounded-lg bg-gray-100 p-1">
+            <button
+              className={`rounded-md py-2 text-sm font-medium transition ${
+                activeTab === "student"
+                  ? "bg-white text-[#0F0A27] shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+              onClick={() => setActiveTab("student")}
+            >
+              Student
+            </button>
+            <button
+              className={`rounded-md py-2 text-sm font-medium transition ${
+                activeTab === "instructor"
+                  ? "bg-white text-[#0F0A27] shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+              onClick={() => setActiveTab("instructor")}
+            >
+              Instructor
+            </button>
+          </div>
 
           {/* Form */}
-          <form className="space-y-4" onSubmit={hanldeRegistration}>
+          <form className="space-y-4" onSubmit={isSignUp? hanldeRegistration : handleLogin}>
             {/* Full Name - Sign Up Only */}
             {isSignUp && (
               <div>
-                <label htmlFor="fullName" className="mb-1 block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="fullName"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
                   Full Name
                 </label>
                 <div className="relative">
@@ -172,7 +217,10 @@ export default function EducratLanding() {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="mb-1 block text-sm font-medium text-gray-700"
+              >
                 Email Address
               </label>
               <div className="relative">
@@ -192,7 +240,10 @@ export default function EducratLanding() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="mb-1 block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <div className="relative">
@@ -204,7 +255,9 @@ export default function EducratLanding() {
                   id="password"
                   name="password"
                   className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-10 text-gray-900 placeholder-gray-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
-                  placeholder={isSignUp ? "Create a password" : "Enter your password"}
+                  placeholder={
+                    isSignUp ? "Create a password" : "Enter your password"
+                  }
                   defaultValue={password}
                 />
                 <button
@@ -212,7 +265,11 @@ export default function EducratLanding() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -226,11 +283,17 @@ export default function EducratLanding() {
                     type="checkbox"
                     className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                  <label
+                    htmlFor="remember-me"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
                     Remember me
                   </label>
                 </div>
-                <a href="#" className="text-sm font-medium text-purple-600 hover:text-purple-500">
+                <a
+                  href="#"
+                  className="text-sm font-medium text-purple-600 hover:text-purple-500"
+                >
                   Forgot password?
                 </a>
               </div>
@@ -244,19 +307,28 @@ export default function EducratLanding() {
                   type="checkbox"
                   className="mt-1 h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                 />
-                <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
+                <label
+                  htmlFor="terms"
+                  className="ml-2 block text-sm text-gray-700"
+                >
                   I agree to the{" "}
-                  <a href="#" className="font-medium text-purple-600 hover:text-purple-500">
+                  <a
+                    href="#"
+                    className="font-medium text-purple-600 hover:text-purple-500"
+                  >
                     Terms of Service
                   </a>{" "}
                   and{" "}
-                  <a href="#" className="font-medium text-purple-600 hover:text-purple-500">
+                  <a
+                    href="#"
+                    className="font-medium text-purple-600 hover:text-purple-500"
+                  >
                     Privacy Policy
                   </a>
                 </label>
               </div>
             )}
-              <p className="text-purple-500 text-sm">{message}</p>
+            <p className="text-purple-500 text-sm">{message}</p>
             {/* Submit Button */}
             <button
               type="submit"
@@ -294,14 +366,20 @@ export default function EducratLanding() {
             {isSignUp ? (
               <>
                 Already have an account?{" "}
-                <button onClick={onSwitchMode} className="font-medium text-purple-600 hover:text-purple-500">
+                <button
+                  onClick={onSwitchMode}
+                  className="font-medium text-purple-600 hover:text-purple-500"
+                >
                   Sign in
                 </button>
               </>
             ) : (
               <>
                 Don't have an account?{" "}
-                <button onClick={onSwitchMode} className="font-medium text-purple-600 hover:text-purple-500">
+                <button
+                  onClick={onSwitchMode}
+                  className="font-medium text-purple-600 hover:text-purple-500"
+                >
                   Sign up
                 </button>
               </>
@@ -309,8 +387,8 @@ export default function EducratLanding() {
           </div>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#0F0A27] font-sans">
@@ -339,7 +417,9 @@ export default function EducratLanding() {
                   <li key={index}>
                     <a
                       href="#"
-                      className={`flex items-center gap-1 text-sm text-white/90 transition hover:text-white ${item.active ? "text-white" : ""}`}
+                      className={`flex items-center gap-1 text-sm text-white/90 transition hover:text-white ${
+                        item.active ? "text-white" : ""
+                      }`}
                     >
                       {item.label}
                       {item.hasDropdown && <ChevronDown className="h-4 w-4" />}
@@ -351,17 +431,20 @@ export default function EducratLanding() {
 
             {/* Right side */}
             <div className="flex items-center gap-6">
-              <button className="text-white/90 hover:text-white">
+              {/* <button className="text-white/90 hover:text-white">
                 <Search className="h-5 w-5" />
-              </button>
-              <button className="relative text-white/90 hover:text-white">
+              </button> */}
+              {/* <button className="relative text-white/90 hover:text-white">
                 <ShoppingCart className="h-5 w-5" />
                 <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
                   0
                 </span>
-              </button>
+              </button> */}
               <div className="hidden items-center gap-4 sm:flex">
-                <button className="text-sm text-white/90 transition hover:text-white" onClick={handleOpenSignIn}>
+                <button
+                  className="text-sm text-white/90 transition hover:text-white"
+                  onClick={handleOpenSignIn}
+                >
                   Log in
                 </button>
                 <button
@@ -380,9 +463,21 @@ export default function EducratLanding() {
       </nav>
 
       {/* Auth Modals */}
-      {showSignUpModal && <AuthModal isSignUp={true} onClose={handleCloseModals} onSwitchMode={handleOpenSignIn} />}
+      {showSignUpModal && (
+        <AuthModal
+          isSignUp={true}
+          onClose={handleCloseModals}
+          onSwitchMode={handleOpenSignIn}
+        />
+      )}
 
-      {showSignInModal && <AuthModal isSignUp={false} onClose={handleCloseModals} onSwitchMode={handleOpenSignUp} />}
+      {showSignInModal && (
+        <AuthModal
+          isSignUp={false}
+          onClose={handleCloseModals}
+          onSwitchMode={handleOpenSignUp}
+        />
+      )}
 
       {/* Hero Section */}
       <main className="relative pt-20">
@@ -395,13 +490,16 @@ export default function EducratLanding() {
                 <br />
                 <span className="mt-2 flex items-baseline gap-2">
                   <span className="relative">
-                    <span className="relative z-10 text-green-400">Digital Learning Resources</span>
+                    <span className="relative z-10 text-green-400">
+                      Digital Learning Resources
+                    </span>
                     {/* <span className="absolute bottom-2 left-0 z-0 h-7 w-full bg-green-400/20"></span> */}
                   </span>
                 </span>
               </h1>
               <p className="mb-8 max-w-lg text-lg text-white/80">
-                Build skills with courses, certificates, and degrees online from world-class universities and companies.
+                Build skills with courses, certificates, and degrees online from
+                world-class universities and companies.
               </p>
               <div className="mb-12 flex flex-col gap-4 sm:flex-row">
                 <button
@@ -447,7 +545,11 @@ export default function EducratLanding() {
 
               <div className="absolute right-0 top-32 z-20 animate-float-delay">
                 <div className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-lg">
-                  <img src="https://placehold.co/48x48" alt="Profile" className="h-12 w-12 rounded-full object-cover" />
+                  <img
+                    src="https://placehold.co/48x48"
+                    alt="Profile"
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
                   <div>
                     <div className="font-semibold">Ali Tufan</div>
                     <div className="text-sm text-gray-500">UX/UI Designer</div>
@@ -462,14 +564,20 @@ export default function EducratLanding() {
                   </div>
                   <div>
                     <div className="font-semibold">Congrats!</div>
-                    <div className="text-sm text-gray-500">Your Admission Completed</div>
+                    <div className="text-sm text-gray-500">
+                      Your Admission Completed
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Main Image */}
               <div className="relative mx-auto max-w-md">
-                <img src={olabsboy.src || "/placeholder.svg"} alt="Student learning" className="rounded-2xl" />
+                <img
+                  src={olabsboy.src || "/placeholder.svg"}
+                  alt="Student learning"
+                  className="rounded-2xl"
+                />
               </div>
             </div>
           </div>
@@ -485,7 +593,11 @@ export default function EducratLanding() {
 
         {/* Wave Divider */}
         <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 200" xmlns="http://www.w3.org/2000/svg" className="fill-white">
+          <svg
+            viewBox="0 0 1440 200"
+            xmlns="http://www.w3.org/2000/svg"
+            className="fill-white"
+          >
             <path d="M0,32L60,37.3C120,43,240,53,360,48C480,43,600,21,720,16C840,11,960,21,1080,32C1200,43,1320,53,1380,58.7L1440,64L1440,200L138 রেডিও,200C1320,200,1200,200,1080,200C960,200,840,200,720,200C600,200,480,200,360,200C240,200,120,200,60,200L0,200Z" />
           </svg>
         </div>
@@ -493,32 +605,33 @@ export default function EducratLanding() {
 
       <style jsx global>{`
         @keyframes float {
-          0%, 100% {
+          0%,
+          100% {
             transform: translateY(0);
           }
           50% {
             transform: translateY(-10px);
           }
         }
-        
+
         @keyframes float-delay {
-          0%, 100% {
+          0%,
+          100% {
             transform: translateY(0);
           }
           50% {
             transform: translateY(-10px);
           }
         }
-        
+
         .animate-float {
           animation: float 6s ease-in-out infinite;
         }
-        
+
         .animate-float-delay {
           animation: float-delay 6s ease-in-out 2s infinite;
         }
       `}</style>
     </div>
-  )
+  );
 }
-
