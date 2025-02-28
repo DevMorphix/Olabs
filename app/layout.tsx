@@ -5,7 +5,7 @@ import { Inter } from 'next/font/google';
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://gigwork.co.in'),
-    title: 'Gigwork - WhatsApp Business Integration Platform',
+    title: 'Olabs - Online Learning Platform',
     description: 'Connect, communicate, and grow your business with WhatsApp integration. Join 1000+ happy customers on Gigwork - your platform for business growth and customer engagement in Kerala.',
     keywords: 'Gigwork, WhatsApp business, Kerala business, customer communication, business growth, digital transformation, service providers, plumbers',
     openGraph: {
