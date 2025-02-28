@@ -48,9 +48,21 @@ export const instructorRegister = async (data: any) => {
     }
 }
 
+
 export const Getsubject = async () => {
     try{
         const response = await axios.get(`${BASE_URL}api/subject/`);
+        return response.data;
+    }catch(error: any){
+        return error.response.data;
+    }
+}
+
+// student login
+export const studentLogin = async (data: any) => {
+    try{
+        const response = await axios.post(`${BASE_URL}auth/student/login`, data);
+
         return response.data;
     }catch(error: any){
         return error.response.data;
@@ -70,4 +82,15 @@ export const createSubject = async (data: any) => {
         return error.response ? error.response.data : { error: 'An error occurred' };
     }
 };
+
+
+// faculty or instructor login
+export const instructorLogin = async (data: any) => {
+    try{
+        const response = await axios.post(`${BASE_URL}auth/teacher/login`, data);
+        return response.data;
+    }catch(error: any){
+        return error.response.data;
+    }
+}
 
