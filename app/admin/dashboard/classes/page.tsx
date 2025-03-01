@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   GraduationCap, 
   BookOpen, 
@@ -19,58 +19,27 @@ import {
   Filter,
   ChevronRight,
   Download,
-  Plus
+  Plus,
+  Loader
 } from 'lucide-react';
 import Link from 'next/link';
+import { GetClass } from '@/app/api';
 
-// Mock classes data
-const mockClasses = [
-  { 
-    id: 1, 
-    title: 'Introduction to Algebra', 
-    subject: 'Mathematics', 
-    instructor: 'Dr. Alan Smith',
-    schedule: 'Mon, Wed 10:00-11:30 AM',
-    students: 34,
-    status: 'Active' 
-  },
-  { 
-    id: 2, 
-    title: 'Basic Physics', 
-    subject: 'Physics', 
-    instructor: 'Prof. Maria Johnson',
-    schedule: 'Tue, Thu 1:00-2:30 PM',
-    students: 28,
-    status: 'Active' 
-  },
-  { 
-    id: 3, 
-    title: 'English Literature', 
-    subject: 'English', 
-    instructor: 'Dr. James Wilson',
-    schedule: 'Fri 9:00-12:00 AM',
-    students: 22,
-    status: 'Active' 
-  },
-  { 
-    id: 4, 
-    title: 'Chemistry Lab', 
-    subject: 'Chemistry', 
-    instructor: 'Prof. Susan Miller',
-    schedule: 'Wed 2:00-4:00 PM',
-    students: 18,
-    status: 'Inactive' 
-  },
-  { 
-    id: 5, 
-    title: 'Computer Programming', 
-    subject: 'Computer Science', 
-    instructor: 'Dr. Robert Chen',
-    schedule: 'Mon, Thu 3:30-5:00 PM',
-    students: 30,
-    status: 'Active' 
-  },
-];
+// Interface for class data based on the actual API response
+interface ClassData {
+  _id: string;
+  title: string;
+  cource_id: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  // Additional fields we'll add for display purposes
+  subject?: string;
+  instructor?: string;
+  schedule?: string;
+  students?: number;
+  status?: string;
+}
 
 export default function ClassesPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -78,25 +47,101 @@ export default function ClassesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [subjectFilter, setSubjectFilter] = useState('all');
+  const [classes, setClasses] = useState<ClassData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        setIsLoading(true);
+        const response = await GetClass();
+        
+        if (response.error) {
+          setError(response.message || 'Failed to fetch classes');
+          return;
+        }
+
+        // Check if the response has data array according to the new format
+        if (response.data && Array.isArray(response.data)) {
+          console.log("API response data:", response.data);
+          
+          // Format the response data to match our display needs
+          const formattedClasses = response.data.map((cls: any) => ({
+            ...cls,
+            // Use title as class_name for display
+            class_name: cls.title,
+            // Default values for missing fields
+            subject: 'Unassigned',
+            instructor: 'Not assigned',
+            schedule: 'Not scheduled',
+            students: 0,
+            status: 'Active'
+          }));
+          
+          setClasses(formattedClasses);
+          setError(null);
+        } else if (response.classes && Array.isArray(response.classes)) {
+          // Fallback for previous API format
+          const formattedClasses = response.classes.map((cls: any) => ({
+            _id: cls._id,
+            title: cls.class_name || cls.title,
+            class_name: cls.class_name || cls.title,
+            subject: cls.subject_name || 'Unassigned',
+            instructor: cls.instructor || 'Not assigned',
+            schedule: cls.schedule || 'Not scheduled',
+            students: cls.students || 0,
+            status: cls.status || 'Active'
+          }));
+          
+          setClasses(formattedClasses);
+          setError(null);
+        } else {
+          setError('Invalid response format from API');
+        }
+      } catch (err) {
+        console.error('Error fetching classes:', err);
+        setError('Failed to load classes. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchClasses();
+  }, []);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
   // Filter classes based on search term and filters
-  const filteredClasses = mockClasses.filter(cls => {
+  const filteredClasses = classes.filter(cls => {
     const matchesSearch = cls.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         cls.instructor.toLowerCase().includes(searchTerm.toLowerCase());
+                         (cls.instructor && cls.instructor.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesStatus = statusFilter === 'all' || cls.status.toLowerCase() === statusFilter.toLowerCase();
+    const matchesStatus = statusFilter === 'all' || 
+                         (cls.status && cls.status.toLowerCase() === statusFilter.toLowerCase());
     
-    const matchesSubject = subjectFilter === 'all' || cls.subject.toLowerCase() === subjectFilter.toLowerCase();
+    const matchesSubject = subjectFilter === 'all' || 
+                          (cls.subject && cls.subject.toLowerCase() === subjectFilter.toLowerCase());
     
     return matchesSearch && matchesStatus && matchesSubject;
   });
 
   // Get unique subjects for filter
-  const subjects = ['all', ...Array.from(new Set(mockClasses.map(cls => cls.subject.toLowerCase())))];
+  const subjects = ['all', ...Array.from(new Set(classes
+    .filter(cls => cls.subject)
+    .map(cls => cls.subject!.toLowerCase())))];
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -145,14 +190,7 @@ export default function ClassesPage() {
               <BookOpen className="h-5 w-5" />
               {isSidebarOpen && <span>Subjects</span>}
             </Link>
-            <Link 
-              href="/admin/dashboard/students"
-              className={`flex items-center gap-3 rounded-lg px-4 py-3 text-white hover:bg-white/10 ${activeTab === 'students' ? 'bg-white/10' : ''}`}
-              onClick={() => setActiveTab('students')}
-            >
-              <Users className="h-5 w-5" />
-              {isSidebarOpen && <span>Students</span>}
-            </Link>
+            
             <Link 
               href="/admin/dashboard/content"
               className={`flex items-center gap-3 rounded-lg px-4 py-3 text-white hover:bg-white/10 ${activeTab === 'content' ? 'bg-white/10' : ''}`}
@@ -251,97 +289,112 @@ export default function ClassesPage() {
 
           {/* Classes Table */}
           <div className="bg-white rounded-lg shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class Title</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instructor</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schedule</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Students</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredClasses.map((cls) => (
-                    <tr key={cls.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{cls.title}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{cls.subject}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{cls.instructor}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{cls.schedule}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{cls.students}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span 
-                          className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                            ${cls.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
-                        >
-                          {cls.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex gap-3">
-                          <button className="text-blue-600 hover:text-blue-900">
-                            <Eye className="h-5 w-5" />
-                          </button>
-                          <button className="text-purple-600 hover:text-purple-900">
-                            <Edit className="h-5 w-5" />
-                          </button>
-                          <button className="text-red-600 hover:text-red-900">
-                            <Trash2 className="h-5 w-5" />
-                          </button>
-                        </div>
-                      </td>
+            {isLoading ? (
+              <div className="flex items-center justify-center p-12">
+                <Loader className="h-8 w-8 text-purple-600 animate-spin" />
+                <span className="ml-2 text-gray-600">Loading classes...</span>
+              </div>
+            ) : error ? (
+              <div className="p-8 text-center">
+                <div className="text-red-500 mb-2">Error: {error}</div>
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class Title</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredClasses.map((cls) => (
+                      <tr key={cls._id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{cls.title}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{cls.subject}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{cls.cource_id}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500">{formatDate(cls.createdAt)}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span 
+                            className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                              ${cls.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
+                          >
+                            {cls.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <div className="flex gap-3">
+                            <button className="text-blue-600 hover:text-blue-900">
+                              <Eye className="h-5 w-5" />
+                            </button>
+                            <button className="text-purple-600 hover:text-purple-900">
+                              <Edit className="h-5 w-5" />
+                            </button>
+                            <button className="text-red-600 hover:text-red-900">
+                              <Trash2 className="h-5 w-5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
 
-              {/* Empty state when no classes match filter */}
-              {filteredClasses.length === 0 && (
-                <div className="py-12 text-center">
-                  <Search className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-lg font-medium text-gray-900">No classes found</h3>
-                  <p className="mt-1 text-gray-500">
-                    We couldn't find any classes matching your search criteria. Try adjusting your filters or search term.
-                  </p>
-                  <button
-                    onClick={() => {
-                      setSearchTerm('');
-                      setStatusFilter('all');
-                      setSubjectFilter('all');
-                    }}
-                    className="mt-4 inline-flex items-center rounded-md border border-transparent bg-purple-100 px-4 py-2 text-sm font-medium text-purple-700 hover:bg-purple-200"
-                  >
-                    Clear all filters
-                  </button>
-                </div>
-              )}
-            </div>
+                {/* Empty state when no classes match filter */}
+                {filteredClasses.length === 0 && (
+                  <div className="py-12 text-center">
+                    <Search className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-lg font-medium text-gray-900">No classes found</h3>
+                    <p className="mt-1 text-gray-500">
+                      We couldn't find any classes matching your search criteria. Try adjusting your filters or search term.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setSearchTerm('');
+                        setStatusFilter('all');
+                        setSubjectFilter('all');
+                      }}
+                      className="mt-4 inline-flex items-center rounded-md border border-transparent bg-purple-100 px-4 py-2 text-sm font-medium text-purple-700 hover:bg-purple-200"
+                    >
+                      Clear all filters
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Pagination */}
-          <div className="mt-6 flex items-center justify-between">
-            <div className="text-sm text-gray-700">
-              Showing <span className="font-medium">{filteredClasses.length}</span> of <span className="font-medium">{mockClasses.length}</span> classes
+          {!isLoading && !error && (
+            <div className="mt-6 flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Showing <span className="font-medium">{filteredClasses.length}</span> of <span className="font-medium">{classes.length}</span> classes
+              </div>
+              <nav className="flex items-center space-x-2">
+                <button className="rounded-md border px-3 py-1 text-sm hover:bg-gray-50" disabled>Previous</button>
+                <button className="rounded-md bg-purple-600 px-3 py-1 text-sm text-white">1</button>
+                <button className="rounded-md border px-3 py-1 text-sm hover:bg-gray-50">Next</button>
+              </nav>
             </div>
-            <nav className="flex items-center space-x-2">
-              <button className="rounded-md border px-3 py-1 text-sm hover:bg-gray-50" disabled>Previous</button>
-              <button className="rounded-md bg-purple-600 px-3 py-1 text-sm text-white">1</button>
-              <button className="rounded-md border px-3 py-1 text-sm hover:bg-gray-50">Next</button>
-            </nav>
-          </div>
+          )}
         </main>
       </div>
     </div>

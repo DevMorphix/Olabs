@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Bot, Cpu, CheckCircle2, XCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 interface ModelAvailability {
   gemini: boolean;
@@ -31,11 +32,17 @@ const MODEL_ICONS = {
 interface ModelSelectorProps {
   selectedModel: string;
   onModelChange: (model: string) => void;
+  theme?: "light" | "dark";
 }
 
-export function ModelSelector({ selectedModel, onModelChange }: ModelSelectorProps) {
+export function ModelSelector({ selectedModel, onModelChange, theme = "light" }: ModelSelectorProps) {
   const [modelAvailability, setModelAvailability] = useState<ModelAvailability | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const isLight = theme === "light";
+  const textColor = isLight ? "text-white" : "text-black";
+  const bgActive = isLight ? "bg-gray-100" : "bg-white/20";
+  const bgInactive = isLight ? "bg-transparent" : "bg-transparent";
 
   useEffect(() => {
     async function fetchModelAvailability() {
@@ -79,18 +86,21 @@ export function ModelSelector({ selectedModel, onModelChange }: ModelSelectorPro
               value={key}
               disabled={!isAvailable}
             >
-              <div className="flex items-center space-x-2">
+              <div className={cn(
+                "flex items-center space-x-2",
+                isLight ? "bg-muted" : "bg-white/10"
+              )}>
                 <Icon className="h-4 w-4" />
                 <div>
                   <div className="flex items-center space-x-2">
-                    <span>{name}</span>
+                    <span className={textColor}>{name}</span>
                     {isAvailable ? (
                       <CheckCircle2 className="w-4 h-4 text-green-500" />
                     ) : (
                       <XCircle className="w-4 h-4 text-red-500" />
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className={`text-xs ${textColor}`}>
                     {MODEL_DESCRIPTIONS[key as keyof typeof MODEL_DESCRIPTIONS]}
                     {!isAvailable && (
                       <span className="text-red-500 block">

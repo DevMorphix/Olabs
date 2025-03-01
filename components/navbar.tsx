@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { GraduationCap, Menu, ChevronDown } from 'lucide-react';
+import { GraduationCap, Menu, ChevronDown, BookOpen } from 'lucide-react';
 import path from 'path';
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const Navbar: React.FC = () => {
   const [showSignUpModal, setShowSignUpModal] = useState(false);
@@ -10,9 +12,9 @@ const Navbar: React.FC = () => {
     { label: "Home", active: true, hasDropdown: false ,path: '/'},
     { label: "About", active: false, hasDropdown: false ,path: '/about'},
     { label: "News", active: false, hasDropdown: false , path: '/news'},
-    { label: "Blog", active: false, hasDropdown: false, path: 'https://blog.inovuslabs.org' },
     { label: "Pages", active: false, hasDropdown: false, path: '/pages' },
     { label: "Contact", active: false, hasDropdown: false ,path: '/contact' },
+    { label: "My Chapters", active: false, hasDropdown: false, path: '/chapters' },
   ];
 
   const handleOpenSignUp = () => {
@@ -61,6 +63,7 @@ const Navbar: React.FC = () => {
                   >
                     {item.label}
                     {item.hasDropdown && <ChevronDown className="h-4 w-4" />}
+                    {item.label === "My Chapters" && <BookOpen className="h-4 w-4 ml-1" />}
                   </a>
                 </li>
               ))}
