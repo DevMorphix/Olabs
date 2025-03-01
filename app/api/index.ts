@@ -318,3 +318,22 @@ export const instructorLogin = async (data: any) => {
         return error.response?.data || { error: true, message: error.message };
     }
 };
+
+
+export const enrollCourse = async (data: any) => {
+    try{
+        const response = await axios.post(`${BASE_URL}api/chapter/enroll`, data);
+        return response.data;
+    }catch(error: any){
+        return error.response?.data || { error: true, message: error.message };
+    }
+}
+
+export const adminLogin = async (data: any) => {
+    try{
+        const response = await axios.post(`${BASE_URL}auth/superadmin/login`, data);
+        return response;
+    }catch(error: any){
+        return error.response?.data || { error: true, message: error.message };
+    }
+}

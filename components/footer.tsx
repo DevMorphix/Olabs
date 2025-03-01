@@ -10,7 +10,7 @@ function footer() {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600">
                 <GraduationCap className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-white">Olabs</span>
+              <span className="text-xl font-bold text-white">EzyLabs</span>
             </a>
             <ul className="flex flex-wrap items-center mb-6 text-sm font-medium text-gray-500 sm:mb-0 dark:text-gray-400">
               <li>

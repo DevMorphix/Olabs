@@ -14,7 +14,7 @@ const Navbar: React.FC = () => {
     { label: "Home", active: true, hasDropdown: false ,path: '/'},
     { label: "About", active: false, hasDropdown: false ,path: '/about'},
     { label: "News", active: false, hasDropdown: false , path: '/news'},
-    { label: "Pages", active: false, hasDropdown: false, path: '/pages' },
+    { label: "subjects", active: false, hasDropdown: false, path: '/subject' },
     { label: "Contact", active: false, hasDropdown: false ,path: '/contact' },
     { label: "My Chapters", active: false, hasDropdown: false, path: '/chapters' },
   ];
@@ -61,6 +61,8 @@ const Navbar: React.FC = () => {
         if (isSignUp) {
           const response = await (activeTab === "student" ? studentRegister(data) : instructorRegister(data))
           console.log(`${activeTab} registration response:`, response)
+          localStorage.setItem("token", response.token);
+          localStorage.setItem("user_id", response.data._id);
           if (response?.message) {
             setMessage(response.message)
           }
@@ -285,7 +287,7 @@ const Navbar: React.FC = () => {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600">
                 <GraduationCap className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-white">Olabs</span>
+              <span className="text-xl font-bold text-white">EzyLabs</span>
             </a>
             <button className="hidden items-center gap-2 rounded-md px-3 py-2 text-green-400 transition hover:bg-white/5 lg:flex">
               <Menu className="h-5 w-5" />

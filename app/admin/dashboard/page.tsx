@@ -29,6 +29,8 @@ export default function AdminDashboard() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+
+  
   // Mock statistics data
   const stats = [
     { label: 'Total Students', value: '3,721', icon: Users, trend: '+12%', color: 'bg-blue-500' },

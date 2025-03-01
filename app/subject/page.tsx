@@ -126,7 +126,7 @@ export default function SubjectsPage() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600">
                   <GraduationCap className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-xl font-bold text-white">Olabs</span>
+                <span className="text-xl font-bold text-white">EzyLabs</span>
               </a>
               <button className="hidden items-center gap-2 rounded-md px-3 py-2 text-green-400 transition hover:bg-white/5 lg:flex">
                 <Menu className="h-5 w-5" />
@@ -189,9 +189,9 @@ export default function SubjectsPage() {
             <p className="mx-auto max-w-2xl text-lg text-white/80">
               Browse our collection of curriculum-aligned digital learning resources across multiple subjects
             </p>
-            {error && <p className="mt-2 text-red-400">{error}</p>}
+            {/* {error && <p className="mt-2 text-red-400">{error}</p>} */}
             {loading && <p className="mt-2 text-yellow-400">Loading subjects...</p>}
-            {apiSubjects.length > 0 && <p className="mt-2 text-green-400">Successfully loaded {apiSubjects.length} subjects from API</p>}
+            {/* {apiSubjects.length > 0 && <p className="mt-2 text-green-400">Successfully loaded {apiSubjects.length} subjects from API</p>} */}
           </div>
 
           {/* Search and Filters */}

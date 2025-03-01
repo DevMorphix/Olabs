@@ -12,6 +12,7 @@ import {
   BookOpen,
   Briefcase,
   Award,
+  Library,
   Star,
   X,
   Mail,
@@ -97,7 +98,9 @@ export default function EducratLanding() {
     try {
       if (activeTab === "student") {
         const response = await studentLogin(data);
-        console.log("student response", response);
+        console.log("student response", response.data._id);
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("user_id", response.data._id);
       } else if (activeTab === "instructor") {
         const response = await instructorLogin(data);
         const message = response.message;
@@ -487,7 +490,7 @@ export default function EducratLanding() {
                     <Briefcase className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <div className="font-semibold text-white">3,000 +</div>
+                    <div className="font-semibold text-white">100 +</div>
                     <div className="text-sm text-white/70">Free Courses</div>
                   </div>
                 </div>
@@ -495,14 +498,10 @@ export default function EducratLanding() {
 
               <div className="absolute right-0 top-32 z-20 animate-float-delay">
                 <div className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-lg">
-                  <img
-                    src="https://placehold.co/48x48"
-                    alt="Profile"
-                    className="h-12 w-12 rounded-full object-cover"
-                  />
+                  <Library  className="h-5 w-5 text-green-600" />
                   <div>
-                    <div className="font-semibold">Ali Tufan</div>
-                    <div className="text-sm text-gray-500">UX/UI Designer</div>
+                    <div className="font-semibold">All courses</div>
+                    {/* <div className="text-sm text-gray-500">UX/UI Designer</div> */}
                   </div>
                 </div>
               </div>

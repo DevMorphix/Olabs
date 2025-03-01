@@ -1,9 +1,64 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { GraduationCap, Search, Menu, ChevronDown, ShoppingCart, BookOpen, Clock, Users, ArrowLeft, Play, FileText, ExternalLink } from 'lucide-react';
-import { getchapterbysubject } from '@/app/api/index';
+import { GraduationCap, Search, Menu, ChevronDown, ShoppingCart, BookOpen, Clock, Users, ArrowLeft, Play, FileText, ExternalLink, AlertTriangle } from 'lucide-react';
+import { getchapterbysubject, enrollCourse} from '@/app/api/index';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Navbar from '@/components/navbar';
+
+// Confirmation Modal Component
+interface ConfirmationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title?: string;
+  message?: string;
+}
+
+const ConfirmationModal = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  title = "Confirm Action", 
+  message = "Are you sure you want to perform this action?" 
+}: ConfirmationModalProps) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm" 
+        onClick={onClose}
+      ></div>
+      
+      {/* Modal */}
+      <div className="relative w-full max-w-md rounded-xl bg-[#1A1333] p-6 shadow-lg">
+        <div className="mb-4 flex items-center gap-3">
+          <AlertTriangle className="h-6 w-6 text-yellow-500" />
+          <h3 className="text-xl font-semibold text-white">{title}</h3>
+        </div>
+        
+        <p className="mb-6 text-white/80">{message}</p>
+        
+        <div className="flex items-center justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 transition"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface Chapter {
   _id: string;
@@ -31,6 +86,47 @@ export default function SubjectDetailPage({ params }: { params: { id: string } }
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Confirmation modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: "Confirm Action",
+    message: "Are you sure you want to proceed?",
+    onConfirm: () => {},
+  });
+
+  // Function to show confirmation dialog
+  const showConfirmation = (config: any) => {
+    setModalConfig({
+      title: config.title || "Confirm Action",
+      message: config.message || "Are you sure you want to proceed?",
+      onConfirm: config.onConfirm || (() => {}),
+    });
+    setModalOpen(true);
+  };
+
+  // Example function for enrollment with API POST request
+  const handleEnrollment = async () => {
+    try {
+      // API POST request would go here
+      // Example: await enrollInSubject(params.id);
+      const student_id = localStorage.getItem("user_id");     
+      
+      const data = {
+        status: "started",
+        chapter_id: chapters[0]?._id,
+        student_id: student_id,
+        mark: 0,
+      }
+      const response = await enrollCourse(data);
+      console.log("API Response:", response);
+      // Success message
+      alert("Successfully enrolled in the subject!");
+    } catch (err) {
+      console.error("Error enrolling in subject:", err);
+      alert("Failed to enroll. Please try again later.");
+    }
+  };
 
   // Fetch subject and chapters data
   useEffect(() => {
@@ -88,68 +184,19 @@ export default function SubjectDetailPage({ params }: { params: { id: string } }
   return (
     <div className="min-h-screen bg-[#0F0A27] font-sans">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#0F0A27]/80 backdrop-blur-lg">
-        <div className="container mx-auto px-4">
-          <div className="flex h-20 items-center justify-between">
-            {/* Left side */}
-            <div className="flex items-center gap-8">
-              <a href="/" className="flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600">
-                  <GraduationCap className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-white">Olabs</span>
-              </a>
-              <button className="hidden items-center gap-2 rounded-md px-3 py-2 text-green-400 transition hover:bg-white/5 lg:flex">
-                <Menu className="h-5 w-5" />
-                <span>Explore</span>
-              </button>
-            </div>
+      <Navbar></Navbar>
 
-            {/* Center */}
-            <div className="hidden lg:block">
-              <ul className="flex items-center gap-8">
-                {navItems.map((item, index) => (
-                  <li key={index}>
-                    <a
-                      href="#"
-                      className={`flex items-center gap-1 text-sm ${item.active ? "text-white" : "text-white/90 transition hover:text-white"}`}
-                    >
-                      {item.label}
-                      {item.hasDropdown && <ChevronDown className="h-4 w-4" />}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Right side */}
-            <div className="flex items-center gap-6">
-              <button className="text-white/90 hover:text-white">
-                <Search className="h-5 w-5" />
-              </button>
-              <button className="relative text-white/90 hover:text-white">
-                <ShoppingCart className="h-5 w-5" />
-                <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                  0
-                </span>
-              </button>
-              <div className="hidden items-center gap-4 sm:flex">
-                <button className="text-sm text-white/90 transition hover:text-white">
-                  Log in
-                </button>
-                <button
-                  className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#0F0A27] transition hover:bg-white/90"
-                >
-                  Sign up
-                </button>
-              </div>
-              <button className="text-white lg:hidden">
-                <Menu className="h-6 w-6" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={() => {
+          modalConfig.onConfirm();
+          setModalOpen(false);
+        }}
+        title={modalConfig.title}
+        message={modalConfig.message}
+      />
 
       {/* Main Content */}
       <main className="min-h-screen pt-24">
@@ -209,7 +256,14 @@ export default function SubjectDetailPage({ params }: { params: { id: string } }
                     </div>
                   </div>
                   <div className="flex md:flex-col gap-3">
-                    <button className="rounded-lg bg-purple-600 px-6 py-2.5 font-medium text-white hover:bg-purple-700 transition w-full">
+                    <button 
+                      className="rounded-lg bg-purple-600 px-6 py-2.5 font-medium text-white hover:bg-purple-700 transition w-full"
+                      onClick={() => showConfirmation({
+                        title: "Confirm Enrollment",
+                        message: "Are you sure you want to enroll in this subject? This will submit a request to the server.",
+                        onConfirm: handleEnrollment
+                      })}
+                    >
                       Enroll Now
                     </button>
                     <button className="rounded-lg border border-white/10 bg-white/5 px-6 py-2.5 font-medium text-white hover:bg-white/10 transition w-full">
