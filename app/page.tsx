@@ -22,9 +22,22 @@ import {
 } from "lucide-react";
 
 import olabsboy from "../public/assets/olabsboy.svg";
+import moe from "../public/assets/moe.png";
+import cdac from "../public/assets/cdac.png";
+import amrita from "../public/assets/amrita-logo.png";
+import meity from "../public/assets/meity.png";
 
-import { studentRegister, instructorRegister, studentLogin , instructorLogin } from "./api/index";
+import {
+  studentRegister,
+  instructorRegister,
+  studentLogin,
+  instructorLogin,
+} from "./api/index";
 import Navbar from "../components/navbar";
+import TopCategories from "@/components/topsubjects";
+import TestimonialCarouselAutoplay from "@/components/testimonial";
+import WhyLearnSection from "@/components/whychoose";
+import Footer from "@/components/footer"
 
 export default function EducratLanding() {
   const [showSignUpModal, setShowSignUpModal] = useState(false);
@@ -96,8 +109,7 @@ export default function EducratLanding() {
     } catch (error) {
       console.error("Registration error:", error);
     }
-  }
-
+  };
 
   const hanldeRegistration = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -191,7 +203,10 @@ export default function EducratLanding() {
           </div>
 
           {/* Form */}
-          <form className="space-y-4" onSubmit={isSignUp? hanldeRegistration : handleLogin}>
+          <form
+            className="space-y-4"
+            onSubmit={isSignUp ? hanldeRegistration : handleLogin}
+          >
             {/* Full Name - Sign Up Only */}
             {isSignUp && (
               <div>
@@ -257,7 +272,7 @@ export default function EducratLanding() {
                   id="password"
                   name="password"
                   className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-10 text-gray-900 placeholder-gray-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
-                  placeholder={
+                  placeholder={ 
                     isSignUp ? "Create a password" : "Enter your password"
                   }
                   defaultValue={password}
@@ -395,8 +410,7 @@ export default function EducratLanding() {
   return (
     <div className="min-h-screen bg-[#0F0A27] font-sans">
       {/* Navigation */}
-      <Navbar
-      />
+      <Navbar />
 
       {/* Auth Modals */}
       {showSignUpModal && (
@@ -528,16 +542,44 @@ export default function EducratLanding() {
         </div>
 
         {/* Wave Divider */}
-        <div className="absolute bottom-0 left-0 right-0">
+        <div className="absolute -bottom-1 left-0 right-0">
           <svg
             viewBox="0 0 1440 200"
             xmlns="http://www.w3.org/2000/svg"
             className="fill-white"
           >
-            <path d="M0,32L60,37.3C120,43,240,53,360,48C480,43,600,21,720,16C840,11,960,21,1080,32C1200,43,1320,53,1380,58.7L1440,64L1440,200L138 রেডিও,200C1320,200,1200,200,1080,200C960,200,840,200,720,200C600,200,480,200,360,200C240,200,120,200,60,200L0,200Z" />
+            <path d="M0,32L60,37.3C120,43,240,53,360,48C480,43,600,21,720,16C840,11,960,21,1080,32C1200,43,1320,53,1380,58.7L1440,64L1440,200L1380,200C1320,200,1200,200,1080,200C960,200,840,200,720,200C600,200,480,200,360,200C240,200,120,200,60,200L0,200Z" />
           </svg>
         </div>
       </main>
+      <section className="bg-white">
+        <p className="text-black flex font-bold items-center justify-center py-8">Our Backborns</p>
+        <div className="container mx-auto px-4 flex  items-center py-4 text-gray-400 font-bold gap-3 justify-between">
+          <img src={moe.src} alt="" />
+          <img src={cdac.src} alt="" />
+          <img src={amrita.src} alt="" />
+          <img src={meity.src} alt="" />
+        </div>
+      </section>
+
+      <section className="flex items-center justify-center bg-white text-black">
+        {/* <p className="font-bold text-xl">Our Subjects</p> */}
+        <TopCategories></TopCategories>
+
+      </section>
+      <section className="flex items-center justify-center bg-white text-black">
+        {/* <p className="font-bold text-xl">Our Subjects</p> */}
+        <TestimonialCarouselAutoplay></TestimonialCarouselAutoplay>
+
+      </section>
+      <section className="flex items-center justify-center bg-white text-black">
+        {/* <p className="font-bold text-xl">Our Subjects</p> */}
+        <WhyLearnSection></WhyLearnSection>
+      </section>
+      
+      <section className=" bg-[#0F0A27]">
+        <Footer></Footer>
+      </section>
 
       <style jsx global>{`
         @keyframes float {
