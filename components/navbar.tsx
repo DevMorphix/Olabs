@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef } from "react"
-import { GraduationCap, Menu, ChevronDown, X, Mail, Lock, User, Eye, EyeOff } from "lucide-react"
+import { GraduationCap, Menu, ChevronDown, X, Mail, Lock, User, Eye, EyeOff, BookOpen } from "lucide-react"
 import { studentLogin, studentRegister, instructorLogin, instructorRegister } from "../app/api/index"
 
 const Navbar: React.FC = () => {
@@ -11,13 +11,13 @@ const Navbar: React.FC = () => {
   const [activeTab, setActiveTab] = useState("student")
 
   const navItems = [
-    { label: "Home", active: true, hasDropdown: false, path: "/" },
-    { label: "About", active: false, hasDropdown: false, path: "/about" },
-    { label: "News", active: false, hasDropdown: false, path: "/news" },
-    { label: "Blog", active: false, hasDropdown: false, path: "https://blog.inovuslabs.org" },
-    { label: "Pages", active: false, hasDropdown: false, path: "/pages" },
-    { label: "Contact", active: false, hasDropdown: false, path: "/contact" },
-  ]
+    { label: "Home", active: true, hasDropdown: false ,path: '/'},
+    { label: "About", active: false, hasDropdown: false ,path: '/about'},
+    { label: "News", active: false, hasDropdown: false , path: '/news'},
+    { label: "Pages", active: false, hasDropdown: false, path: '/pages' },
+    { label: "Contact", active: false, hasDropdown: false ,path: '/contact' },
+    { label: "My Chapters", active: false, hasDropdown: false, path: '/chapters' },
+  ];
 
   const handleOpenSignUp = () => {
     setShowSignUpModal(true)
@@ -306,6 +306,7 @@ const Navbar: React.FC = () => {
                   >
                     {item.label}
                     {item.hasDropdown && <ChevronDown className="h-4 w-4" />}
+                    {item.label === "My Chapters" && <BookOpen className="h-4 w-4 ml-1" />}
                   </a>
                 </li>
               ))}

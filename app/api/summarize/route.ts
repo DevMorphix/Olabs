@@ -515,15 +515,24 @@ export async function POST(req: Request) {
 
   (async () => {
     try {
-      const { url, language, mode, aiModel = 'gemini' } = await req.json();
+      const { url, language, mode, aiModel = 'gemini', class_id, subject_id, title: userTitle, description: userDescription } = await req.json();
       const videoId = extractVideoId(url);
 
       logger.info('Processing video request', {
         videoId,
         language,
         mode,
-        aiModel
+        aiModel,
+        class_id: class_id || "Not provided",
+        subject_id: subject_id || "Not provided",
+        userTitle: userTitle || "Not provided",
+        userDescription: userDescription || "Not provided"
       });
+
+      // Validate class_id and subject_id
+      if (!class_id || !subject_id) {
+        throw new Error("Class ID and Subject ID are required");
+      }
 
       if (!AI_MODELS[aiModel as keyof typeof AI_MODELS]) {
         throw new Error(`Invalid AI model selected. Please choose from: ${Object.values(MODEL_NAMES).join(', ')}`);
@@ -560,7 +569,11 @@ export async function POST(req: Request) {
         message: 'Fetching video transcript...'
       });
 
-      const { transcript, source, title } = await getTranscript(videoId);
+      const { transcript, source, title: autoTitle } = await getTranscript(videoId);
+      
+      // Use user-provided title if available, otherwise use auto-generated title
+      const finalTitle = userTitle || autoTitle;
+
       const chunks = await splitTranscriptIntoChunks(transcript);
       const totalChunks = chunks.length;
       const intermediateSummaries = [];
@@ -658,12 +671,33 @@ export async function POST(req: Request) {
         //   source: savedSummary.source || 'youtube',
         //   status: 'completed'
         // });
-
-        const response = await createchapter(
-          {title:title,content:summary,yt_links:[{title:title,url:`https://www.youtube.com/watch?v=${videoId}`,description:summary}]}
-        )
-        console.log("after call to api",response);
+        logger.info('Preparing chapter data for API call:', {
+          title: finalTitle,
+          contentLength: summary.length, // Log length instead of full content for brevity
+          yt_links: [{
+            title: finalTitle,
+            url: `https://www.youtube.com/watch?v=${videoId}`,
+            descriptionLength: summary.length
+          }],
+          class_id,
+          subject_id
+        });
         
+        const response = await createchapter(
+          {
+            title: finalTitle,
+            content: userDescription || "",
+            yt_links: [{
+              title: finalTitle,
+              url: `https://www.youtube.com/watch?v=${videoId}`,
+              description: summary
+            }],
+            class_id: class_id,
+            subject_id: subject_id
+          }
+        );
+        console.log("after call to api", response);
+
 
         // const response = await axios.post(
         //   `https://olabs-hackathon-backend.onrender.com/api/chapter/create-chapter`,

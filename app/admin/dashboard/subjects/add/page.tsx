@@ -1,265 +1,240 @@
 "use client";
 
-import { useState } from 'react';
-import { 
-  GraduationCap, 
-  BookOpen, 
-  Users, 
-  Video,
-  BarChart3,
-  BookmarkPlus,
-  Settings,
-  LogOut,
-  Bell,
-  Menu,
-  ChevronRight,
-  ArrowLeft,
-  Save,
-  X,
-  Type,
-} from 'lucide-react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createSubject } from '@/app/api';
+import { createSubject, GetClass } from '@/app/api';
+import { validateSubjectData, formatSubjectData } from '@/app/utils/validators';
+import { Loader, AlertCircle, Check, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+
+interface ClassOption {
+  _id: string;
+  title: string;
+}
 
 export default function AddSubjectPage() {
   const router = useRouter();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState('subjects');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
-
-  // Simplified form state to match API structure
   const [formData, setFormData] = useState({
     title: '',
+    description: '',
+    class_id: ''
   });
-  
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [classes, setClasses] = useState<ClassOption[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  // Fetch class options for dropdown
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const response = await GetClass();
+        console.log("GetClass response:", response);
+        
+        // Format classes for the dropdown based on the API response structure
+        if (response.data && Array.isArray(response.data)) {
+          setClasses(response.data.map((cls: any) => ({
+            _id: cls._id,
+            title: cls.title
+          })));
+        } else if (response.classes && Array.isArray(response.classes)) {
+          setClasses(response.classes.map((cls: any) => ({
+            _id: cls._id,
+            title: cls.class_name || cls.title
+          })));
+        }
+      } catch (err) {
+        console.error('Error fetching classes:', err);
+      }
+    };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    fetchClasses();
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    setFormData(prev => ({ ...prev, [name]: value }));
     
-    // Clear error when field is edited
-    if (errors[name]) {
-      setErrors({
-        ...errors,
-        [name]: ''
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[name]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
       });
     }
-    
-    // Clear API error when form is modified
-    if (apiError) {
-      setApiError(null);
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
-    
-    if (!formData.title.trim()) {
-      newErrors.title = 'Subject title is required';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(null);
     
-    if (!validateForm()) {
+    // Validate form data
+    const validation = validateSubjectData(formData);
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
       return;
     }
-
-    setIsSubmitting(true);
-    setApiError(null);
+    
+    // Format data for API
+    const formattedData = formatSubjectData(formData);
+    
+    console.log("Submitting subject data:", formattedData);
+    setIsLoading(true);
     
     try {
-      // Make API call to create subject with simplified data
-      const response = await createSubject(formData);
+      const response = await createSubject(formattedData);
+      console.log("Create subject response:", response);
       
-      if (response && response.status === 200) {
-        // If successful, redirect to subjects page
-        router.push('/admin/dashboard/subjects');
+      if (response.error) {
+        console.error('Error creating subject:', response);
+        setError(response.message || 'Failed to create subject. Please try again.');
       } else {
-        // Handle API error response
-        setApiError(response?.message || 'Failed to create subject. Please try again.');
+        setSuccess('Subject created successfully!');
+        // Reset form after successful submission
+        setFormData({
+          title: '',
+          description: '',
+          class_id: ''
+        });
+        
+        // Redirect after a short delay
+        setTimeout(() => {
+          router.push('/admin/dashboard/subjects');
+        }, 2000);
       }
-    } catch (error) {
-      console.error('Error creating subject:', error);
-      setApiError('An unexpected error occurred. Please try again later.');
+    } catch (err: any) {
+      console.error('Unexpected error:', err);
+      setError(err.message || 'An unexpected error occurred');
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div className={`${isSidebarOpen ? 'w-64' : 'w-20'} bg-[#0F0A27] transition-all duration-300 ease-in-out flex flex-col h-full fixed`}>
-        {/* Logo */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10">
-          <Link href="/admin/dashboard" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600 shrink-0">
-              <GraduationCap className="h-5 w-5 text-white" />
-            </div>
-            {isSidebarOpen && <span className="text-xl font-bold text-white">Olabs Admin</span>}
+    <div className="bg-gray-50 min-h-screen">
+      {/* Header */}
+      <header className="bg-white shadow-sm px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/admin/dashboard/subjects" className="p-1 rounded-full hover:bg-gray-100">
+              <ArrowLeft className="h-6 w-6 text-gray-600" />
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-800">Add New Subject</h1>
+          </div>
+          <Link 
+            href="/admin/dashboard/subjects" 
+            className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+          >
+            Back to Subjects
           </Link>
-          <button onClick={toggleSidebar} className="text-white p-1 hover:bg-white/5 rounded">
-            {isSidebarOpen ? 
-              <ChevronRight className="h-5 w-5" /> : 
-              <Menu className="h-5 w-5" />
-            }
-          </button>
         </div>
+      </header>
 
-        {/* Navigation */}
-        <nav className="mt-6 px-3 flex-grow">
-          <div className="space-y-1">
-            <Link 
-              href="/admin/dashboard"
-              className={`flex items-center gap-3 rounded-lg px-4 py-3 text-white hover:bg-white/10 ${activeTab === 'dashboard' ? 'bg-white/10' : ''}`}
-              onClick={() => setActiveTab('dashboard')}
-            >
-              <BarChart3 className="h-5 w-5" />
-              {isSidebarOpen && <span>Dashboard</span>}
-            </Link>
-            <Link 
-              href="/admin/dashboard/classes"
-              className={`flex items-center gap-3 rounded-lg px-4 py-3 text-white hover:bg-white/10 ${activeTab === 'classes' ? 'bg-white/10' : ''}`}
-              onClick={() => setActiveTab('classes')}
-            >
-              <Video className="h-5 w-5" />
-              {isSidebarOpen && <span>Classes</span>}
-            </Link>
-            <Link 
-              href="/admin/dashboard/subjects"
-              className={`flex items-center gap-3 rounded-lg px-4 py-3 text-white hover:bg-white/10 ${activeTab === 'subjects' ? 'bg-white/10' : ''}`}
-              onClick={() => setActiveTab('subjects')}
-            >
-              <BookOpen className="h-5 w-5" />
-              {isSidebarOpen && <span>Subjects</span>}
-            </Link>
-            <Link 
-              href="/admin/dashboard/students"
-              className={`flex items-center gap-3 rounded-lg px-4 py-3 text-white hover:bg-white/10 ${activeTab === 'students' ? 'bg-white/10' : ''}`}
-              onClick={() => setActiveTab('students')}
-            >
-              <Users className="h-5 w-5" />
-              {isSidebarOpen && <span>Students</span>}
-            </Link>
-            <Link 
-              href="/admin/dashboard/content"
-              className={`flex items-center gap-3 rounded-lg px-4 py-3 text-white hover:bg-white/10 ${activeTab === 'content' ? 'bg-white/10' : ''}`}
-              onClick={() => setActiveTab('content')}
-            >
-              <BookmarkPlus className="h-5 w-5" />
-              {isSidebarOpen && <span>Content</span>}
-            </Link>
+      {/* Form Container */}
+      <div className="max-w-3xl mx-auto mt-8 p-6 bg-white rounded-lg shadow">
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 flex items-center">
+            <AlertCircle className="h-5 w-5 mr-2" />
+            <span>{error}</span>
           </div>
-          
-          <div className="mt-10 space-y-1">
-            <div className={`flex items-center gap-3 rounded-lg px-4 py-3 text-white hover:bg-white/10 cursor-pointer ${activeTab === 'settings' ? 'bg-white/10' : ''}`}>
-              <Settings className="h-5 w-5" />
-              {isSidebarOpen && <span>Settings</span>}
-            </div>
-            <div className="flex items-center gap-3 rounded-lg px-4 py-3 text-white hover:bg-white/10 cursor-pointer">
-              <LogOut className="h-5 w-5" />
-              {isSidebarOpen && <span>Logout</span>}
-            </div>
-          </div>
-        </nav>
-      </div>
+        )}
 
-      {/* Main Content */}
-      <div className={`${isSidebarOpen ? 'ml-64' : 'ml-20'} flex-1 transition-all duration-300 ease-in-out`}>
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Link href="/admin/dashboard/subjects" className="p-1 rounded-full hover:bg-gray-100">
-                <ArrowLeft className="h-6 w-6 text-gray-600" />
-              </Link>
-              <h1 className="text-2xl font-bold text-gray-800">Add New Subject</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <button className="p-2 rounded-full bg-gray-100 relative">
-                <Bell className="h-5 w-5 text-gray-600" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-              </button>
-            </div>
+        {/* Success Message */}
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 flex items-center">
+            <Check className="h-5 w-5 mr-2" />
+            <span>{success}</span>
           </div>
-        </header>
+        )}
 
-        {/* Form Content */}
-        <main className="p-6">
-          {apiError && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4 text-red-600">
-              <div className="flex items-start">
-                <X className="h-5 w-5 mr-2" />
-                <span>{apiError}</span>
-              </div>
-            </div>
-          )}
-          
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm">
-            <div className="border-b px-6 py-4">
-              <h2 className="text-lg font-medium text-gray-800">Subject Information</h2>
-              <p className="mt-1 text-sm text-gray-600">Fill in the details to create a new subject</p>
-            </div>
-            
-            <div className="px-6 py-4">
-              {/* Subject Title - Only field needed based on API response */}
-              <div className="max-w-md">
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                  Subject Title <span className="text-red-500">*</span>
-                </label>
-                <div className="mt-1 relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <Type className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    className={`block w-full rounded-md border ${errors.title ? 'border-red-300' : 'border-gray-300'} pl-10 pr-3 py-2 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-purple-500 sm:text-sm`}
-                    placeholder="e.g. Mathematics, Physics, etc."
-                    value={formData.title}
-                    onChange={handleChange}
-                  />
-                </div>
-                {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
-              </div>
-            </div>
-            
-            {/* Form Actions */}
-            <div className="border-t px-6 py-4 flex justify-end gap-3">
-              <Link
-                href="/admin/dashboard/subjects"
-                className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-              >
-                <X className="h-4 w-4 mr-2" />
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                className={`inline-flex items-center rounded-md border border-transparent bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-purple-700 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
-                disabled={isSubmitting}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {isSubmitting ? 'Creating...' : 'Create Subject'}
-              </button>
-            </div>
-          </form>
-        </main>
+        <form onSubmit={handleSubmit}>
+          {/* Subject Name */}
+          <div className="mb-6">
+            <label className="block text-gray-700 font-medium mb-2" htmlFor="title">
+              Subject Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                validationErrors.title ? 'border-red-500' : ''
+              }`}
+              placeholder="Enter subject name"
+            />
+            {validationErrors.title && (
+              <p className="mt-1 text-sm text-red-500">{validationErrors.title}</p>
+            )}
+          </div>
+
+          {/* Description */}
+          <div className="mb-6">
+            <label className="block text-gray-700 font-medium mb-2" htmlFor="description">
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              rows={4}
+              placeholder="Enter subject description"
+            />
+          </div>
+
+          {/* Class ID */}
+          <div className="mb-6">
+            <label className="block text-gray-700 font-medium mb-2" htmlFor="class_id">
+              Class
+            </label>
+            <select
+              id="class_id"
+              name="class_id"
+              value={formData.class_id}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                validationErrors.class_id ? 'border-red-500' : ''
+              }`}
+            >
+              <option value="">Select a class</option>
+              {classes.map((cls) => (
+                <option key={cls._id} value={cls._id}>
+                  {cls.title}
+                </option>
+              ))}
+            </select>
+            {validationErrors.class_id && (
+              <p className="mt-1 text-sm text-red-500">{validationErrors.class_id}</p>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center ${
+                isLoading ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
+            >
+              {isLoading ? (
+                <>
+                  <Loader className="animate-spin h-5 w-5 mr-2" />
+                  Creating...
+                </>
+              ) : (
+                'Create Subject'
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

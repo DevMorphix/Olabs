@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { GraduationCap, Search, Menu, ChevronDown, ShoppingCart, Filter, Clock, Users } from 'lucide-react';
 import { Getsubject } from '@/app/api/index';
+import Link from 'next/link';  // Add this import for the Link component
 
 // Mock data for subjects
 const mockSubjects = [
@@ -273,9 +274,12 @@ export default function SubjectsPage() {
                           <span>{subject.lessonsCount || 0} lessons</span>
                         </div>
                       </div>
-                      <button className="rounded-md bg-purple-600/20 px-3 py-1 text-sm font-medium text-purple-400 transition hover:bg-purple-600/30">
+                      <Link 
+                        href={`/subject/${subject._id}`}
+                        className="rounded-md bg-purple-600/20 px-3 py-1 text-sm font-medium text-purple-400 transition hover:bg-purple-600/30"
+                      >
                         Explore
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 </div>

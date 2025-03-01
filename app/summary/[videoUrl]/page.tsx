@@ -1,12 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { AVAILABLE_LANGUAGES } from "@/lib/youtube"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button" // Fixed import
 import { Skeleton } from "@/components/ui/skeleton"
-import { Youtube, Headphones, Subtitles, Bot, Archive } from "lucide-react"
+import { Youtube, Headphones, Subtitles, Bot, Archive, BookOpen } from "lucide-react"
 import { use } from "react"
 import ReactMarkdown from 'react-markdown'
 import { createchapter } from "@/app/api/index"
@@ -40,22 +41,43 @@ export default function SummaryPage({ params }: PageProps) {
     stage: 'analyzing',
     message: 'Analyzing video content...'
   })
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const searchParams = useSearchParams()
   const languageCode = searchParams.get("lang") || "en"
   const mode = (searchParams.get("mode") || "video") as "video" | "podcast"
   const aiModel = (searchParams.get("model") || "gemini") as "gemini" | "groq" | "gpt4"
+  const classId = searchParams.get("class") || ""
+  const subjectId = searchParams.get("subject") || ""
+  const userTitle = searchParams.get("title") || ""
+  const userDescription = searchParams.get("description") || ""
   const { videoUrl } = use(params)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchSummary = async () => {
       try {
         setLoading(true)
         setError(null)
+        setApiError(null)
 
+        // Validate class and subject IDs before sending
+        if (!classId || !subjectId) {
+          throw new Error("Class ID and Subject ID are required");
+        }
 
-        
         const url = urlSafeBase64Decode(videoUrl)
+        console.log("Sending request with:", {
+          url,
+          language: languageCode,
+          mode,
+          aiModel,
+          class_id: classId,
+          subject_id: subjectId,
+          title: userTitle,
+          description: userDescription
+        });
+        
         const response = await fetch("/api/summarize", {
           method: "POST",
           headers: {
@@ -65,7 +87,11 @@ export default function SummaryPage({ params }: PageProps) {
             url,
             language: languageCode,
             mode,
-            aiModel
+            aiModel,
+            class_id: classId,
+            subject_id: subjectId,
+            title: userTitle,
+            description: userDescription
           }),
         })
 
@@ -96,10 +122,14 @@ export default function SummaryPage({ params }: PageProps) {
                 message: data.message
               })
             } else if (data.type === 'complete') {
-
               setSummary(data.summary)
               setSource(data.source)
+              if (data.warning) {
+                setApiError(data.warning)
+              }
               break
+            } else if (data.type === 'error') {
+              throw new Error(data.error || "An error occurred")
             }
           } catch (e) {
             console.error('Error parsing chunk:', e)
@@ -110,12 +140,11 @@ export default function SummaryPage({ params }: PageProps) {
         setError(err instanceof Error ? err.message : "An error occurred while generating the summary")
       } finally {
         setLoading(false)
-        
       }
     }
 
     fetchSummary()
-  }, [videoUrl, languageCode, mode, aiModel])
+  }, [videoUrl, languageCode, mode, aiModel, classId, subjectId, userTitle, userDescription])
 
   const displayLanguage =
     Object.entries(AVAILABLE_LANGUAGES).find(([_, code]) => code === languageCode)?.[0] || "English"
@@ -221,7 +250,11 @@ export default function SummaryPage({ params }: PageProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {error && <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-md">{error}</div>}
+          {error && <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-md mb-4">{error}</div>}
+          {apiError && <div className="bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 px-4 py-3 rounded-md mb-4">
+            <p className="font-medium">API Warning:</p>
+            <p>{apiError}</p>
+          </div>}
 
           {!loading && !error && (
             <div className="prose prose-sm sm:prose lg:prose-lg max-w-none dark:prose-invert">
@@ -229,6 +262,21 @@ export default function SummaryPage({ params }: PageProps) {
             </div>
           )}
         </CardContent>
+        <CardFooter className="flex justify-between border-t pt-6">
+          <Button 
+            variant="outline"
+            onClick={() => router.push('/main')}
+          >
+            Create Another Summary
+          </Button>
+          <Button 
+            onClick={() => router.push('/chapters')}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            <BookOpen className="mr-2 h-4 w-4" />
+            View All Chapters
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   )
