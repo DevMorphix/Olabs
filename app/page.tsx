@@ -23,10 +23,6 @@ import {
 } from "lucide-react";
 
 import olabsboy from "../public/assets/olabsboy.svg";
-import moe from "../public/assets/moe.png";
-import cdac from "../public/assets/cdac.png";
-import amrita from "../public/assets/amrita-logo.png";
-import meity from "../public/assets/meity.png";
 
 import {
   studentRegister,
@@ -39,6 +35,7 @@ import TopCategories from "@/components/topsubjects";
 import TestimonialCarouselAutoplay from "@/components/testimonial";
 import WhyLearnSection from "@/components/whychoose";
 import Footer from "@/components/footer"
+import Image from "next/image";
 
 export default function EducratLanding() {
   const [showSignUpModal, setShowSignUpModal] = useState(false);
@@ -551,15 +548,15 @@ export default function EducratLanding() {
           </svg>
         </div>
       </main>
-      <section className="bg-white">
+      {/* <section className="bg-white">
         <p className="text-black flex font-bold items-center justify-center py-8">Our Backborns</p>
         <div className="container mx-auto px-4 flex  items-center py-4 text-gray-400 font-bold gap-3 justify-between">
-          <img src={moe.src} alt="" />
-          <img src={cdac.src} alt="" />
-          <img src={amrita.src} alt="" />
-          <img src={meity.src} alt="" />
+          <Image src="../public/assets/moe.png" alt="" />
+          <Image src="../public/assets/cdac.png" alt="" />
+          <Image src="../public/assets/amrita-logo.png" alt="" />
+          <Image src="../public/assets/meity.pn" alt="" />
         </div>
-      </section>
+      </section> */}
 
       <section className="flex items-center justify-center bg-white text-black">
         {/* <p className="font-bold text-xl">Our Subjects</p> */}

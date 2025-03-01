@@ -21,6 +21,9 @@ import {
   askQuestionAboutChapter
 } from "@/lib/gemini"
 
+
+export const runtime = "edge";
+
 // Define interfaces
 interface YtLink {
   _id: string;
@@ -346,7 +349,7 @@ export default function ChapterDetailPage({
                     '--tw-prose-pre-bg': 'rgba(0, 0, 0, 0.3)',
                     '--tw-prose-th-borders': 'rgba(255, 255, 255, 0.2)',
                     '--tw-prose-td-borders': 'rgba(255, 255, 255, 0.1)'
-                  }}
+                  } as React.CSSProperties}
                 >
                   <ReactMarkdown 
                     components={{
