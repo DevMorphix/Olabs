@@ -68,7 +68,6 @@ export default function TopCategories() {
 
   // Calculate total pages based on screen size
   const getVisibleItems = () => {
-    // For mobile, we'll show 1 item, for tablet 3 items, and for desktop all 6
     if (typeof window !== "undefined") {
       if (window.innerWidth < 640) {
         return categories.slice(currentPage, currentPage + itemsPerPage.mobile)

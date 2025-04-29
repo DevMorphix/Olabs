@@ -252,7 +252,7 @@ export default function ChapterDetailPage({
 
   return (
     <div className="min-h-screen bg-[#0F0A27] font-sans text-white">
-      <Navbar />
+      {/* <Navbar /> */}
       
       <main className="container mx-auto px-4 py-24">
         <Button 

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { GraduationCap, Menu, ChevronDown, X, Mail, Lock, User, Eye, EyeOff, BookOpen } from "lucide-react"
 import { studentLogin, studentRegister, instructorLogin, instructorRegister } from "../app/api/index"
 
@@ -9,6 +9,22 @@ const Navbar: React.FC = () => {
   const [showSignUpModal, setShowSignUpModal] = useState(false)
   const [showSignInModal, setShowSignInModal] = useState(false)
   const [activeTab, setActiveTab] = useState("student")
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem("token")
+    if (token) {
+      setIsLoggedIn(true)
+    }
+  }, [])
+  
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    localStorage.removeItem("user_id")
+    setIsLoggedIn(false)
+  }
 
   const navItems = [
     { label: "Home", active: true, hasDropdown: false ,path: '/'},
@@ -63,13 +79,20 @@ const Navbar: React.FC = () => {
           console.log(`${activeTab} registration response:`, response)
           localStorage.setItem("token", response.token);
           localStorage.setItem("user_id", response.data._id);
+          setIsLoggedIn(true); // Add this line
+          onClose(); // Close modal after successful signup
           if (response?.message) {
             setMessage(response.message)
           }
         } else {
           const response = await (activeTab === "student" ? studentLogin(data) : instructorLogin(data))
           console.log(`${activeTab} login response:`, response)
+          localStorage.setItem("token", response.token);
+          localStorage.setItem("user_id", response.data._id);
+          setIsLoggedIn(true); // Add this line
+          onClose(); // Close modal after successful login
           if (response?.message) {
+            setActiveTab("/submit")
             setMessage(response.message)
           }
         }
@@ -317,21 +340,32 @@ const Navbar: React.FC = () => {
 
           {/* Right side */}
           <div className="flex items-center gap-6">
-            <div className="hidden items-center gap-4 sm:flex">
-              <button className="text-sm text-white/90 transition hover:text-white" onClick={handleOpenSignIn}>
-                Log in
-              </button>
-              <button
-                className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#0F0A27] transition hover:bg-white/90"
-                onClick={handleOpenSignUp}
-              >
-                Sign up
-              </button>
-            </div>
-            <button className="text-white lg:hidden">
-              <Menu className="h-6 w-6" />
-            </button>
-          </div>
+  <div className="hidden items-center gap-4 sm:flex">
+    {isLoggedIn ? (
+      <button
+        className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600"
+        onClick={handleLogout}
+      >
+        Log out
+      </button>
+    ) : (
+      <>
+        <button className="text-sm text-white/90 transition hover:text-white" onClick={handleOpenSignIn}>
+          Log in
+        </button>
+        <button
+          className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-[#0F0A27] transition hover:bg-white/90"
+          onClick={handleOpenSignUp}
+        >
+          Sign up
+        </button>
+      </>
+    )}
+  </div>
+  <button className="text-white lg:hidden">
+    <Menu className="h-6 w-6" />
+  </button>
+</div>
         </div>
       </div>
 

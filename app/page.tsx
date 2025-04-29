@@ -103,6 +103,7 @@ export default function EducratLanding() {
         const message = response.message;
         setMessage(message);
         console.log("instructor response", response);
+      
       }
       // const response = await studentRegister(data)
       // console.log("response", response)
