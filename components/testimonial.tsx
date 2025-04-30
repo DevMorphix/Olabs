@@ -125,7 +125,7 @@ export default function TestimonialCarouselAutoplay() {
   }
 
   return (
-    <section className="py-16 px-4 bg-[#0F0A27]">
+    <section className="py-16 px-[280px] bg-[#0F0A27]">
       <div className="">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-white mb-4">What Our Clients Say</h2>

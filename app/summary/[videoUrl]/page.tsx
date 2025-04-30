@@ -5,9 +5,9 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { AVAILABLE_LANGUAGES } from "@/lib/youtube"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button" // Fixed import
+import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Youtube, Headphones, Subtitles, Bot, Archive, BookOpen } from "lucide-react"
+import { Youtube, Headphones, Subtitles, Archive, BookOpen } from "lucide-react"
 import { use } from "react"
 import ReactMarkdown from 'react-markdown'
 import { createchapter } from "@/app/api/index"
@@ -112,27 +112,51 @@ export default function SummaryPage({ params }: PageProps) {
 
           const chunk = decoder.decode(value)
           try {
-            const data = JSON.parse(chunk)
+            // Handle multiple JSON objects in a chunk by splitting by newline
+            const lines = chunk.split('\n').filter(line => line.trim());
+            
+            for (const line of lines) {
+              try {
+                const data = JSON.parse(line);
+                console.log("Parsed chunk data:", data);
 
-            if (data.type === 'progress') {
-              setStatus({
-                currentChunk: data.currentChunk,
-                totalChunks: data.totalChunks,
-                stage: data.stage,
-                message: data.message
-              })
-            } else if (data.type === 'complete') {
-              setSummary(data.summary)
-              setSource(data.source)
-              if (data.warning) {
-                setApiError(data.warning)
+                if (data.type === 'progress') {
+                  setStatus({
+                    currentChunk: data.currentChunk,
+                    totalChunks: data.totalChunks,
+                    stage: data.stage,
+                    message: data.message
+                  });
+                } else if (data.type === 'complete') {
+                  console.log("Summary received:", {
+                    summaryLength: data.summary?.length,
+                    summaryPreview: data.summary?.substring(0, 100) + "...",
+                    source: data.source,
+                    warning: data.warning
+                  });
+                  
+                  // Make sure summary is not null or undefined
+                  if (!data.summary) {
+                    console.error("Warning: Received empty summary from server");
+                    setApiError("The server returned an empty summary.");
+                  } else {
+                    setSummary(data.summary);
+                    setSource(data.source);
+                    if (data.warning) {
+                      setApiError(data.warning);
+                    }
+                  }
+                  break;
+                } else if (data.type === 'error') {
+                  throw new Error(data.error || "An error occurred");
+                }
+              } catch (lineError) {
+                console.warn("Could not parse line as JSON:", line);
               }
-              break
-            } else if (data.type === 'error') {
-              throw new Error(data.error || "An error occurred")
             }
           } catch (e) {
-            console.error('Error parsing chunk:', e)
+            console.error('Error processing chunk:', e, 'Chunk content:', chunk);
+            setError('Failed to parse server response');
           }
         }
       } catch (err) {
@@ -256,9 +280,43 @@ export default function SummaryPage({ params }: PageProps) {
             <p>{apiError}</p>
           </div>}
 
-          {!loading && !error && (
+          {!error && summary ? (
             <div className="prose prose-sm sm:prose lg:prose-lg max-w-none dark:prose-invert">
-              <ReactMarkdown>{summary}</ReactMarkdown>
+              <ReactMarkdown
+                components={{
+                  h1: ({ children }) => <h1 className="text-2xl font-bold mb-4 text-purple-800 dark:text-purple-300">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-xl font-semibold mb-3 text-purple-700 dark:text-purple-400">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-lg font-semibold mb-2 text-purple-600 dark:text-purple-500">{children}</h3>,
+                  p: ({ children }) => <p className="mb-4 leading-relaxed">{children}</p>,
+                  ul: ({ children }) => <ul className="list-disc pl-6 mb-4">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal pl-6 mb-4">{children}</ol>,
+                  li: ({ children }) => <li className="mb-1">{children}</li>,
+                  blockquote: ({ children }) => (
+                    <blockquote className="border-l-4 border-purple-400 pl-4 italic my-4 bg-purple-50 dark:bg-purple-900/20 py-2 pr-2 rounded-r">{children}</blockquote>
+                  ),
+                  code: ({ node, inline, className, children, ...props }) => {
+                    return inline ? (
+                      <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm" {...props}>
+                        {children}
+                      </code>
+                    ) : (
+                      <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded overflow-x-auto mb-4">
+                        <code className="text-sm" {...props}>
+                          {children}
+                        </code>
+                      </pre>
+                    );
+                  },
+                  em: ({ children }) => <em className="italic text-purple-600 dark:text-purple-400">{children}</em>,
+                  strong: ({ children }) => <strong className="font-bold text-gray-800 dark:text-gray-200">{children}</strong>,
+                }}
+              >
+                {summary}
+              </ReactMarkdown>
+            </div>
+          ) : !error && (
+            <div className="text-center text-muted-foreground py-8">
+              No summary content available.
             </div>
           )}
         </CardContent>

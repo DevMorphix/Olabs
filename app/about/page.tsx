@@ -27,9 +27,9 @@ function About() {
                 About Us
               </h1>
               <p className="mb-8 max-w-lg text-lg text-white/80">
-                Online Labs (EzyLabs) is a virtual learning platform that provides students
+                Online Labs (VidXplore) is a virtual learning platform that provides students
                 with interactive laboratory experiments in Physics, Chemistry, Biology,
-                Mathematics, and English. Designed for students from classes 9 to 12, EzyLabs
+                Mathematics, and English. Designed for students from classes 9 to 12, VidXplore
                 aligns with NCERT/CBSE and State Board syllabi, offering an engaging and
                 accessible way to learn.
               </p>
@@ -37,7 +37,7 @@ function About() {
                 Our platform includes simulations, animations, and self-evaluation tools,
                 allowing students to conduct experiments from anywhere with just an
                 internet connection. By eliminating the constraints of physical labs,
-                EzyLabs ensures every learner has access to quality educational resources.
+                VidXplore ensures every learner has access to quality educational resources.
               </p>
               <div className="mb-12 flex flex-col gap-4 sm:flex-row">
                 <button className="rounded-lg bg-purple-600 px-6 py-3 font-semibold text-white transition hover:bg-purple-700">
@@ -69,7 +69,7 @@ function About() {
               <div className="relative mx-auto max-w-md">
                 <img
                   src={olabsboy.src || "/placeholder.svg"}
-                  alt="About EzyLabs"
+                  alt="About VidXplore"
                   className="rounded-2xl"
                 />
               </div>

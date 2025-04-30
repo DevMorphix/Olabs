@@ -310,7 +310,7 @@ const Navbar: React.FC = () => {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600">
                 <GraduationCap className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-white">EzyLabs</span>
+              <span className="text-xl font-bold text-white">VidXplore</span>
             </a>
             <button className="hidden items-center gap-2 rounded-md px-3 py-2 text-green-400 transition hover:bg-white/5 lg:flex">
               <Menu className="h-5 w-5" />

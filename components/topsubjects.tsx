@@ -105,13 +105,13 @@ export default function TopCategories() {
   }
 
   return (
-    <section className="py-12 px-4 max-w-7xl mx-auto">
+    <section className="py-12  ">
       <div className="text-center mb-10">
         <h2 className="text-3xl font-bold text-indigo-900 mb-2">Top Subjects</h2>
         {/* <p className="text-gray-600">Lorem ipsum dolor sit amet, consectetur.</p> */}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-8">
         {getVisibleItems().map((category) => (
           <div key={category.id} className="bg-gray-100 rounded-lg p-6 flex flex-col items-center text-center">
             <div className="bg-white rounded-full p-5 mb-4 w-20 h-20 flex items-center justify-center">

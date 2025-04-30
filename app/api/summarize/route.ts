@@ -509,8 +509,22 @@ export async function POST(req: Request) {
   const stream = new TransformStream();
   const writer = stream.writable.getWriter();
 
+  // Update the writeProgress function for more reliable JSON transmission
   const writeProgress = async (data: any) => {
-    await writer.write(encoder.encode(JSON.stringify(data) + '\n'));
+    try {
+      // Ensure we're writing a single clean JSON object with newline delimitation
+      const jsonString = JSON.stringify(data);
+      await writer.write(encoder.encode(jsonString + '\n'));
+      
+      // Log what's being sent to help with debugging (but truncate long summaries)
+      if (data.type === 'complete' && data.summary) {
+        logger.debug(`Sending to client: ${data.type} response (summary length: ${data.summary.length})`);
+      } else {
+        logger.debug(`Sending to client: ${jsonString}`);
+      }
+    } catch (error) {
+      logger.error('Error writing progress to stream:', error);
+    }
   };
 
   (async () => {
@@ -665,12 +679,14 @@ export async function POST(req: Request) {
           // });
         // }
 
-        // await writeProgress({
-        //   type: 'complete',
-        //   summary: savedSummary.content,
-        //   source: savedSummary.source || 'youtube',
-        //   status: 'completed'
-        // });
+        // Successful completion - send back the summary in response
+        await writeProgress({
+          type: 'complete',
+          summary: summary,  // Make sure summary is included
+          source: source || 'youtube',
+          status: 'completed'
+        });
+
         logger.info('Preparing chapter data for API call:', {
           title: finalTitle,
           contentLength: summary.length, // Log length instead of full content for brevity
@@ -683,28 +699,42 @@ export async function POST(req: Request) {
           subject_id
         });
         
-        const response = await createchapter(
-          {
-            title: finalTitle,
-            content: userDescription || "",
-            yt_links: [{
+        // Save to database after sending response to client
+        try {
+          const response = await createchapter(
+            {
               title: finalTitle,
-              url: `https://www.youtube.com/watch?v=${videoId}`,
-              description: summary
-            }],
-            class_id: class_id,
-            subject_id: subject_id
-          }
-        );
-        console.log("after call to api", response);
-
-
-        // const response = await axios.post(
-        //   `https://olabs-hackathon-backend.onrender.com/api/chapter/create-chapter`,
-        //   {title:title,content:summary,yt_links:[{title:title,url:`https://www.youtube.com/watch?v=${videoId}`,description:summary}]},
-        // );
-        // console.log("after call to api",response.data);
-        
+              content: userDescription || "",
+              yt_links: [{
+                title: finalTitle,
+                url: `https://www.youtube.com/watch?v=${videoId}`,
+                description: summary
+              }],
+              class_id: class_id,
+              subject_id: subject_id
+            }
+          );
+          logger.info("Chapter created successfully:", response);
+          
+          // Send the complete response to the client after chapter creation
+          await writeProgress({
+            type: 'complete',
+            summary: summary,
+            source: source || 'youtube',
+            status: 'completed'
+          });
+        } catch (apiError) {
+          logger.error("Failed to create chapter:", apiError);
+          
+          // Still send the summary even if chapter creation failed
+          await writeProgress({
+            type: 'complete',
+            summary: summary,
+            source: source || 'youtube',
+            status: 'completed',
+            warning: 'Failed to save content as chapter. Your summary is still available.'
+          });
+        }
 
       } catch (dbError: any) {
         console.warn('Warning: Failed to save to database -', dbError?.message || 'Unknown database error');
